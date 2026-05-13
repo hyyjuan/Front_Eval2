@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: frontend
+    ports:
+      - "5000:5000"
+    environment:
+      - PORT=5000
+      - DEBUG=False
+      - SECRET_KEY=${SECRET_KEY:-clave_secreta_produccion}
+      - BACKEND_URL=${BACKEND_URL:-http://localhost:3000}
+    restart: unless-stopped
+    networks:
+      - frontend-net
+
+networks:
+  frontend-net:
+    driver: bridge

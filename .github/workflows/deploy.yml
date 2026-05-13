@@ -1,4 +1,4 @@
-name: CI/CD Frontend — Innovatech
+name: CI/CD Frontend
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -47,6 +46,6 @@ jobs:
               -e PORT=5000 \
               -e DEBUG=False \
               -e SECRET_KEY=clave_secreta_produccion \
-              -e BACKEND_URL=http://10.0.2.196:3000 \
+              -e BACKEND_URL=http://10.0.1.61:3000 \
               ${{ secrets.DOCKERHUB_USERNAME }}/innovatech-frontend:latest
             docker image prune -f

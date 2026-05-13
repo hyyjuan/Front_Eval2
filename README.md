@@ -1,5 +1,5 @@
 # Innovatech Chile — Frontend
-
+-
 Aplicación web Flask para el sistema de gestión de usuarios de Innovatech Chile.
 Se comunica con el backend API para mostrar y gestionar usuarios.
 Desplegada en AWS EC2 con Docker y CI/CD automatizado via GitHub Actions.

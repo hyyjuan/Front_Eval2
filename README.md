@@ -1,131 +1,81 @@
-# Frontend - Aplicación Web con Flask
+# Innovatech Chile — Frontend
 
-## Descripción
-Frontend desarrollado en Python con el framework Flask. Proporciona una interfaz web completa para la gestión de usuarios, con comunicación RESTful con el backend API.
+Aplicación web Flask para el sistema de gestión de usuarios de Innovatech Chile.
+Se comunica con el backend API para mostrar y gestionar usuarios.
+Desplegada en AWS EC2 con Docker y CI/CD automatizado via GitHub Actions.
 
-## Versiones y Herramientas Requeridas
+## Stack tecnológico
 
-### Lenguaje y Runtime
-- **Python**: Versión 3.8 o superior
-- **pip**: Versión 21.0 o superior (gestor de paquetes de Python)
+- **Runtime:** Python 3.11
+- **Framework:** Flask 2.3 + Gunicorn
+- **Servidor web:** Gunicorn (producción)
+- **Contenedor:** Docker (multi-stage build)
+- **CI/CD:** GitHub Actions + Docker Hub
+- **Infraestructura:** AWS EC2 en VPC
 
-### Dependencias Principales
-- **Flask**: ^2.3.3 - Framework web micro para Python
-- **Flask-CORS**: ^4.0.0 - Middleware para habilitar CORS
-- **requests**: ^2.31.0 - Librería para peticiones HTTP
-- **python-dotenv**: ^1.0.0 - Manejo de variables de entorno
-- **Jinja2**: ^3.1.2 - Motor de plantillas (incluido con Flask)
+## Estructura del repositorio
 
-## Instalación
-
-```bash
-# Crear entorno virtual (recomendado)
-python -m venv venv
-
-# Activar entorno virtual
-# Windows:
-venv\Scripts\activate
-# Linux/Mac:
-source venv/bin/activate
-
-# Instalar dependencias
-pip install -r requirements.txt
+```
+.
+├── app.py                  # Punto de entrada — aplicación Flask
+├── requirements.txt        # Dependencias Python
+├── templates/              # Plantillas HTML
+│   ├── base.html           # Plantilla base
+│   ├── index.html          # Lista de usuarios
+│   ├── crear_usuario.html  # Formulario de creación
+│   ├── editar_usuario.html # Formulario de edición
+│   ├── 404.html            # Página de error 404
+│   └── 500.html            # Página de error 500
+├── Dockerfile              # Multi-stage build (builder + runner)
+├── docker-compose.yml      # Stack del servicio frontend
+├── .env.example            # Variables de entorno de referencia
+├── .gitignore              # Excluye .env y llaves
+└── .github/
+    └── workflows/
+        └── deploy.yml      # Pipeline CI/CD
 ```
 
-## Configuración
+## Cómo ejecutar localmente
 
-1. Copiar el archivo de variables de entorno:
 ```bash
+git clone https://github.com/hyyjuan/Front_Eval2
+cd Front_Eval2
 cp .env.example .env
+# Editar .env con la IP del backend
+docker compose up -d
+docker compose ps
+# Abrir http://localhost:5000
 ```
 
-2. Editar el archivo `.env` con tu configuración:
-```
-PORT=5000
-DEBUG=False
-BACKEND_URL=http://localhost:3000
-SECRET_KEY=clave_secreta_muy_segura_aqui
-```
+## Pipeline CI/CD
 
-## Ejecución
+El pipeline se activa automáticamente al hacer push a la rama `deploy`.
 
-```bash
-# Para desarrollo
-python app.py
+**Flujo:** push a deploy → build imagen Docker → push a Docker Hub → deploy en EC2 vía SSH
 
-# O con variables de entorno
-FLASK_ENV=development python app.py
-```
+## Variables de entorno
 
-## Estructura del Proyecto
+| Variable | Descripción | Default |
+|----------|-------------|---------|
+| PORT | Puerto del servidor Flask | 5000 |
+| DEBUG | Modo debug | False |
+| SECRET_KEY | Clave secreta para sesiones | — |
+| BACKEND_URL | URL del backend API | http://localhost:3000 |
 
-```
-frontend/
-├── app.py                 # Aplicación principal Flask
-├── requirements.txt       # Dependencias Python
-├── .env.example          # Ejemplo de variables de entorno
-├── .env                  # Variables de entorno (crear manualmente)
-├── templates/            # Plantillas HTML
-│   ├── base.html         # Plantilla base
-│   ├── index.html        # Página principal
-│   ├── crear_usuario.html# Formulario crear usuario
-│   ├── editar_usuario.html# Formulario editar usuario
-│   ├── 404.html          # Página error 404
-│   └── 500.html          # Página error 500
-├── static/               # Archivos estáticos (CSS, JS, imágenes)
-└── README.md             # Este archivo
-```
+## GitHub Secrets requeridos
 
-## Funcionalidades
+- `DOCKERHUB_USERNAME` — usuario de Docker Hub
+- `DOCKERHUB_TOKEN` — token de acceso Docker Hub
+- `EC2_HOST` — IP pública de ec2-front
+- `EC2_USER` — ec2-user
+- `EC2_SSH_KEY` — contenido del archivo .pem
 
-### Páginas Disponibles
-- **Página Principal (`/`)**: Lista todos los usuarios con opciones de CRUD
-- **Crear Usuario (`/crear`)**: Formulario para agregar nuevos usuarios
-- **Editar Usuario (`/editar/<id>`)**: Formulario para modificar usuarios existentes
-- **Eliminar Usuario**: Botón de acción en la lista principal
+## Decisiones técnicas
 
-### Características Técnicas
-- **Responsive Design**: Interfaz adaptable a diferentes dispositivos
-- **Bootstrap 5**: Framework CSS para estilos modernos
-- **Font Awesome**: Iconos profesionales
-- **Validación**: Validación en cliente y servidor
-- **Mensajes Flash**: Notificaciones al usuario
-- **Manejo de Errores**: Páginas personalizadas para errores 404 y 500
+**Multi-stage build:** la etapa builder instala las dependencias Python en una carpeta local, la etapa runner copia solo lo necesario. Esto evita incluir pip y herramientas de build en la imagen final.
 
-## Comunicación con Backend
+**Gunicorn sobre Flask dev server:** Gunicorn es un servidor WSGI de producción más estable y eficiente que el servidor de desarrollo de Flask, soporta múltiples workers concurrentes.
 
-La aplicación se comunica con el backend API mediante peticiones HTTP REST:
+**Usuario no root:** el contenedor corre con un usuario sin privilegios aplicando el principio de mínimo privilegio.
 
-```python
-# Ejemplo de petición GET para obtener usuarios
-response = requests.get(f'{BACKEND_URL}/api/usuarios')
-usuarios = response.json()
-
-# Ejemplo de petición POST para crear usuario
-response = requests.post(f'{BACKEND_URL}/api/usuarios', json=datos_usuario)
-```
-
-## Puertos Requeridos
-
-### Para funcionamiento en contenedor:
-- **Puerto 5000**: Puerto del servidor frontend Flask (HTTP)
-- **Puerto 3000**: Puerto de comunicación con backend API (externo)
-
-### Explicación de puertos:
-- **5000**: Es el puerto donde escucha el servidor Flask para servir la aplicación web
-- **3000**: Es el puerto del backend API al que el frontend se conecta para obtener/enviar datos
-
-## Variables de Entorno
-
-| Variable | Descripción | Valor por Defecto |
-|----------|-------------|-------------------|
-| `PORT` | Puerto del servidor Flask | 5000 |
-| `DEBUG` | Modo debug (True/False) | False |
-| `BACKEND_URL` | URL del backend API | http://localhost:3000 |
-| `SECRET_KEY` | Clave secreta para sesiones | clave_secreta_por_defecto |
-
-## Notas Importantes
-- El backend API debe estar corriendo antes de iniciar el frontend
-- Asegúrate de que las URLs en las variables de entorno sean correctas
-- En producción, establece `DEBUG=False` y usa una `SECRET_KEY` segura
-- La aplicación está diseñada para funcionar con el backend API de este proyecto
+**Docker Hub sobre ECR:** AWS Academy genera credenciales temporales que rotan cada pocas horas, lo que hace inviable ECR en pipelines automáticos. Docker Hub usa credenciales permanentes almacenadas como GitHub Secrets.
